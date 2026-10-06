@@ -349,6 +349,34 @@ export async function updateUserRole(userId: string, role: UserRole): Promise<Us
   return user || null;
 }
 
+export async function updateUserCredentials(userId: string, newPassword?: string, newUsername?: string): Promise<User | null> {
+  const user = inMemoryUsers.find(u => u.id === userId);
+  if (!user) return null;
+
+  const updates: any = {};
+  if (newPassword) {
+    user.password = newPassword;
+    updates.password = newPassword;
+  }
+  if (newUsername) {
+    user.username = newUsername;
+    updates.username = newUsername;
+  }
+
+  if (isSupabaseConfigured && supabase && Object.keys(updates).length > 0) {
+    try {
+      await supabase
+        .from('users')
+        .update(updates)
+        .eq('id', userId);
+    } catch (e) {
+      console.warn('Supabase updateUserCredentials error:', e);
+    }
+  }
+
+  return user;
+}
+
 export async function deleteUser(userId: string): Promise<boolean> {
   inMemoryUsers = inMemoryUsers.filter(u => u.id !== userId);
 

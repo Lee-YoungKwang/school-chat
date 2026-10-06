@@ -22,9 +22,15 @@ export const AdminApprovalModal: React.FC<AdminApprovalModalProps> = ({
 }) => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'pending' | 'all'>('pending');
+  const [activeTab, setActiveTab] = useState<'pending' | 'all' | 'settings'>('pending');
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [feedbackMsg, setFeedbackMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+
+  // Admin Account & Password change state
+  const [newAdminUsername, setNewAdminUsername] = useState(currentUser?.username || 'admin');
+  const [newAdminPassword, setNewAdminPassword] = useState('');
+  const [newAdminPasswordConfirm, setNewAdminPasswordConfirm] = useState('');
+  const [credLoading, setCredLoading] = useState(false);
 
   const fetchUsersList = async () => {
     setLoading(true);
@@ -109,6 +115,48 @@ export const AdminApprovalModal: React.FC<AdminApprovalModalProps> = ({
       setFeedbackMsg({ text: '삭제 실패', type: 'error' });
     } finally {
       setActionLoadingId(null);
+    }
+  };
+
+  const handleUpdateCredentials = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newAdminPassword && newAdminPassword !== newAdminPasswordConfirm) {
+      setFeedbackMsg({ text: '새 비밀번호와 비밀번호 확인이 일치하지 않습니다.', type: 'error' });
+      return;
+    }
+    if (newAdminPassword && newAdminPassword.length < 4) {
+      setFeedbackMsg({ text: '비밀번호는 최소 4자리 이상이어야 합니다.', type: 'error' });
+      return;
+    }
+    setCredLoading(true);
+    setFeedbackMsg(null);
+    try {
+      const adminUser = users.find(u => u.role === 'admin') || currentUser;
+      if (!adminUser) return;
+      const res = await fetch('/api/admin/users', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: adminUser.id,
+          newPassword: newAdminPassword.trim() || undefined,
+          newUsername: newAdminUsername.trim() || undefined,
+        }),
+      });
+      if (res.ok) {
+        setFeedbackMsg({
+          text: '🎉 관리자 계정 정보가 성공적으로 변경되었습니다! 다음 로그인 시 변경된 정보로 로그인해 주세요.',
+          type: 'success'
+        });
+        setNewAdminPassword('');
+        setNewAdminPasswordConfirm('');
+        fetchUsersList();
+      } else {
+        setFeedbackMsg({ text: '계정 정보 변경 실패', type: 'error' });
+      }
+    } catch (e) {
+      setFeedbackMsg({ text: '네트워크 연결 오류', type: 'error' });
+    } finally {
+      setCredLoading(false);
     }
   };
 
@@ -231,6 +279,17 @@ export const AdminApprovalModal: React.FC<AdminApprovalModalProps> = ({
           >
             <Users className="w-3.5 h-3.5" />
             전체 회원 관리 ({users.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('settings')}
+            className={`px-4 py-2 text-xs font-bold rounded-xl transition flex items-center gap-1.5 ${
+              activeTab === 'settings'
+                ? 'clay-btn bg-slate-800 text-white dark:bg-white dark:text-slate-900 shadow-sm'
+                : 'text-slate-500 hover:text-slate-800 dark:text-slate-400'
+            }`}
+          >
+            <Crown className="w-3.5 h-3.5 text-amber-500" />
+            관리자 계정/비밀번호 변경
           </button>
         </div>
 
@@ -393,6 +452,70 @@ export const AdminApprovalModal: React.FC<AdminApprovalModalProps> = ({
                   )}
                 </div>
               ))}
+            </div>
+          )}
+
+          {activeTab === 'settings' && (
+            <div className="p-5 rounded-2xl clay-card bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 space-y-4">
+              <div className="border-b border-slate-100 dark:border-slate-700/60 pb-3">
+                <h4 className="text-sm font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
+                  <Crown className="w-4 h-4 text-amber-500" />
+                  관리자(나) 아이디 및 비밀번호 변경
+                </h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  기본 제공되는 관리자 아이디(<code className="px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-700 font-mono text-[11px]">admin</code>)와 비밀번호(<code className="px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-700 font-mono text-[11px]">admin1234</code>)를 언제든지 안전하게 변경할 수 있습니다.
+                </p>
+              </div>
+
+              <form onSubmit={handleUpdateCredentials} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    관리자 아이디 (Username)
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newAdminUsername}
+                    onChange={(e) => setNewAdminUsername(e.target.value)}
+                    className="w-full px-3.5 py-2.5 text-xs clay-input text-slate-800 dark:text-white"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      새 비밀번호
+                    </label>
+                    <input
+                      type="password"
+                      placeholder="변경할 새 비밀번호 입력 (4자리 이상)"
+                      value={newAdminPassword}
+                      onChange={(e) => setNewAdminPassword(e.target.value)}
+                      className="w-full px-3.5 py-2.5 text-xs clay-input text-slate-800 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      새 비밀번호 확인
+                    </label>
+                    <input
+                      type="password"
+                      placeholder="새 비밀번호 다시 입력"
+                      value={newAdminPasswordConfirm}
+                      onChange={(e) => setNewAdminPasswordConfirm(e.target.value)}
+                      className="w-full px-3.5 py-2.5 text-xs clay-input text-slate-800 dark:text-white"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={credLoading}
+                  className="w-full py-3 clay-btn bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl transition shadow-md flex items-center justify-center gap-1.5"
+                >
+                  {credLoading ? '저장 중...' : '💾 관리자 계정 정보 저장'}
+                </button>
+              </form>
             </div>
           )}
         </div>

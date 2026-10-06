@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { fetchUsers, updateUserStatus, updateUserRole, deleteUser } from '@/lib/supabase';
+import { fetchUsers, updateUserStatus, updateUserRole, updateUserCredentials, deleteUser } from '@/lib/supabase';
 import { UserStatus, UserRole } from '@/types';
 
 export const runtime = 'nodejs';
@@ -26,7 +26,7 @@ export async function GET() {
 export async function PATCH(request: Request) {
   try {
     const body = await request.json();
-    const { userId, status, role } = body;
+    const { userId, status, role, newPassword, newUsername } = body;
 
     if (!userId) {
       return NextResponse.json({ error: 'userId가 필요합니다.' }, { status: 400 });
@@ -40,6 +40,10 @@ export async function PATCH(request: Request) {
 
     if (role) {
       updatedUser = await updateUserRole(userId, role as UserRole);
+    }
+
+    if (newPassword || newUsername) {
+      updatedUser = await updateUserCredentials(userId, newPassword, newUsername);
     }
 
     return NextResponse.json({
