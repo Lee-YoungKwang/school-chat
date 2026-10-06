@@ -310,71 +310,163 @@ export async function createUser(userData: Omit<User, 'id' | 'created_at'>): Pro
 }
 
 export async function updateUserStatus(userId: string, status: UserStatus): Promise<User | null> {
-  const user = inMemoryUsers.find(u => u.id === userId);
-  if (user) {
-    user.status = status;
-  }
+  let updatedUser: User | null = null;
 
   if (isSupabaseConfigured && supabase) {
     try {
-      await supabase
+      const queryId = /^\d+$/.test(String(userId)) ? Number(userId) : userId;
+      const { data, error } = await supabase
         .from('users')
         .update({ status })
-        .eq('id', userId);
+        .eq('id', queryId)
+        .select()
+        .single();
+      if (!error && data) {
+        updatedUser = {
+          id: String(data.id),
+          username: data.username,
+          password: data.password,
+          name: data.name,
+          role: (data.role as UserRole) || 'student',
+          status: (data.status as UserStatus) || 'pending',
+          grade: data.grade ? Number(data.grade) : undefined,
+          class_num: data.class_num ? Number(data.class_num) : undefined,
+          student_num: data.student_num ? Number(data.student_num) : undefined,
+          department: data.department || undefined,
+          position: data.position || undefined,
+          bio: data.bio || undefined,
+          created_at: data.created_at,
+        };
+      }
     } catch (e) {
       console.warn('Supabase updateUserStatus error:', e);
     }
   }
 
-  return user || null;
+  const memUser = inMemoryUsers.find(u => u.id === userId || (updatedUser && u.username === updatedUser.username));
+  if (memUser) {
+    memUser.status = status;
+    if (!updatedUser) updatedUser = memUser;
+  }
+
+  return updatedUser;
 }
 
 export async function updateUserRole(userId: string, role: UserRole): Promise<User | null> {
-  const user = inMemoryUsers.find(u => u.id === userId);
-  if (user) {
-    user.role = role;
-  }
+  let updatedUser: User | null = null;
 
   if (isSupabaseConfigured && supabase) {
     try {
-      await supabase
+      const queryId = /^\d+$/.test(String(userId)) ? Number(userId) : userId;
+      const { data, error } = await supabase
         .from('users')
         .update({ role })
-        .eq('id', userId);
+        .eq('id', queryId)
+        .select()
+        .single();
+      if (!error && data) {
+        updatedUser = {
+          id: String(data.id),
+          username: data.username,
+          password: data.password,
+          name: data.name,
+          role: (data.role as UserRole) || 'student',
+          status: (data.status as UserStatus) || 'pending',
+          grade: data.grade ? Number(data.grade) : undefined,
+          class_num: data.class_num ? Number(data.class_num) : undefined,
+          student_num: data.student_num ? Number(data.student_num) : undefined,
+          department: data.department || undefined,
+          position: data.position || undefined,
+          bio: data.bio || undefined,
+          created_at: data.created_at,
+        };
+      }
     } catch (e) {
       console.warn('Supabase updateUserRole error:', e);
     }
   }
 
-  return user || null;
+  const memUser = inMemoryUsers.find(u => u.id === userId || (updatedUser && u.username === updatedUser.username));
+  if (memUser) {
+    memUser.role = role;
+    if (!updatedUser) updatedUser = memUser;
+  }
+
+  return updatedUser;
 }
 
-export async function updateUserCredentials(userId: string, newPassword?: string, newUsername?: string): Promise<User | null> {
-  const user = inMemoryUsers.find(u => u.id === userId);
-  if (!user) return null;
-
+export async function updateUserCredentials(
+  userId: string, 
+  newPassword?: string, 
+  newUsername?: string,
+  currentUsername?: string
+): Promise<User | null> {
   const updates: any = {};
-  if (newPassword) {
-    user.password = newPassword;
-    updates.password = newPassword;
-  }
-  if (newUsername) {
-    user.username = newUsername;
-    updates.username = newUsername;
-  }
+  if (newPassword) updates.password = newPassword;
+  if (newUsername) updates.username = newUsername;
 
-  if (isSupabaseConfigured && supabase && Object.keys(updates).length > 0) {
+  if (Object.keys(updates).length === 0) return null;
+
+  let updatedUser: User | null = null;
+
+  if (isSupabaseConfigured && supabase) {
     try {
-      await supabase
+      const queryId = /^\d+$/.test(String(userId)) ? Number(userId) : userId;
+      let { data, error } = await supabase
         .from('users')
         .update(updates)
-        .eq('id', userId);
+        .eq('id', queryId)
+        .select()
+        .single();
+
+      // If update by id did not return data and currentUsername is given, fallback to username
+      if ((error || !data) && currentUsername) {
+        const res = await supabase
+          .from('users')
+          .update(updates)
+          .eq('username', currentUsername)
+          .select()
+          .single();
+        data = res.data;
+        error = res.error;
+      }
+
+      if (!error && data) {
+        updatedUser = {
+          id: String(data.id),
+          username: data.username,
+          password: data.password,
+          name: data.name,
+          role: (data.role as UserRole) || 'student',
+          status: (data.status as UserStatus) || 'pending',
+          grade: data.grade ? Number(data.grade) : undefined,
+          class_num: data.class_num ? Number(data.class_num) : undefined,
+          student_num: data.student_num ? Number(data.student_num) : undefined,
+          department: data.department || undefined,
+          position: data.position || undefined,
+          bio: data.bio || undefined,
+          created_at: data.created_at,
+        };
+      } else {
+        console.warn('Supabase updateUserCredentials error:', error);
+      }
     } catch (e) {
       console.warn('Supabase updateUserCredentials error:', e);
     }
   }
 
-  return user;
+  const memUser = inMemoryUsers.find(u => 
+    u.id === userId || 
+    (currentUsername && u.username === currentUsername) ||
+    (updatedUser && u.username === updatedUser.username)
+  );
+  if (memUser) {
+    if (newPassword) memUser.password = newPassword;
+    if (newUsername) memUser.username = newUsername;
+    if (!updatedUser) updatedUser = memUser;
+  }
+
+  return updatedUser;
 }
 
 export async function deleteUser(userId: string): Promise<boolean> {
@@ -382,10 +474,11 @@ export async function deleteUser(userId: string): Promise<boolean> {
 
   if (isSupabaseConfigured && supabase) {
     try {
+      const queryId = /^\d+$/.test(String(userId)) ? Number(userId) : userId;
       await supabase
         .from('users')
         .delete()
-        .eq('id', userId);
+        .eq('id', queryId);
       return true;
     } catch (e) {
       console.warn('Supabase deleteUser error:', e);

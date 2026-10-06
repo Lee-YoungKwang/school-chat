@@ -65,7 +65,8 @@ export async function POST(request: Request) {
     const updated = await updateUserCredentials(
       user.id,
       trimmedNewPassword || undefined,
-      trimmedNewUsername || undefined
+      trimmedNewUsername || undefined,
+      currentUsername.trim()
     );
 
     if (!updated) {

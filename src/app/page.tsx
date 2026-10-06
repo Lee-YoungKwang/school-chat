@@ -13,6 +13,7 @@ import { RankingBoard } from '@/components/RankingBoard';
 import { AuthModal } from '@/components/AuthModal';
 import { AdminApprovalModal } from '@/components/AdminApprovalModal';
 import { ChangeCredentialsModal } from '@/components/ChangeCredentialsModal';
+import { SchoolChatbot } from '@/components/SchoolChatbot';
 import { 
   PlusCircle, 
   Sparkles, 
@@ -49,6 +50,7 @@ export default function Home() {
   const [authTab, setAuthTab] = useState<'login' | 'signup'>('login');
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [isChangeCredentialsOpen, setIsChangeCredentialsOpen] = useState(false);
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
 
   // Sync dark mode class
   useEffect(() => {
@@ -286,6 +288,7 @@ export default function Home() {
         onLogout={handleLogout}
         onOpenAdminModal={() => setIsAdminModalOpen(true)}
         onOpenChangeCredentials={() => setIsChangeCredentialsOpen(true)}
+        onOpenChatbot={() => setIsChatbotOpen(true)}
         pendingCount={pendingCount}
         isDark={isDark}
         onToggleDark={() => setIsDark(!isDark)}
@@ -535,6 +538,12 @@ export default function Home() {
         rankings={rankings}
         onRefresh={handleRefreshRankings}
         isLoading={isRankingLoading}
+      />
+
+      <SchoolChatbot
+        isOpen={isChatbotOpen}
+        onClose={() => setIsChatbotOpen(false)}
+        onOpen={() => setIsChatbotOpen(true)}
       />
     </div>
   );

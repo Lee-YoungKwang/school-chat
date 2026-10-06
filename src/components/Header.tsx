@@ -4,7 +4,7 @@ import React from 'react';
 import { User, UserRole } from '@/types';
 import { 
   Sun, Moon, Sparkles, Trophy, LogIn, LogOut, 
-  Crown, School, GraduationCap, ShieldCheck, UserCheck, KeyRound 
+  Crown, School, GraduationCap, ShieldCheck, UserCheck, KeyRound, Bot 
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -13,6 +13,7 @@ interface HeaderProps {
   onLogout: () => void;
   onOpenAdminModal: () => void;
   onOpenChangeCredentials: () => void;
+  onOpenChatbot: () => void;
   pendingCount: number;
   isDark: boolean;
   onToggleDark: () => void;
@@ -26,6 +27,7 @@ export const Header: React.FC<HeaderProps> = ({
   onLogout,
   onOpenAdminModal,
   onOpenChangeCredentials,
+  onOpenChatbot,
   pendingCount,
   isDark,
   onToggleDark,
@@ -77,6 +79,15 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <Trophy className="w-4 h-4 text-amber-600 dark:text-amber-400" />
             <span>명예의 전당</span>
+          </button>
+
+          {/* AI Chatbot Button */}
+          <button
+            onClick={onOpenChatbot}
+            className="clay-btn px-3.5 py-2 bg-purple-50 hover:bg-purple-100 text-purple-800 dark:bg-purple-950/60 dark:text-purple-200 text-xs sm:text-sm font-bold flex items-center gap-1.5 shadow-sm"
+          >
+            <Bot className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+            <span>🤖 AI 도우미</span>
           </button>
 
           {/* Admin Member Management Button (Exclusively visible to admin) */}
