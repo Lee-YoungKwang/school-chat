@@ -2,13 +2,14 @@
 
 import React, { useState } from 'react';
 import { User, UserRole } from '@/types';
-import { X, User as UserIcon, Lock, GraduationCap, School, CheckCircle2, AlertCircle, Sparkles, ShieldCheck } from 'lucide-react';
+import { X, User as UserIcon, Lock, GraduationCap, School, CheckCircle2, AlertCircle, Sparkles, ShieldCheck, KeyRound } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   onLoginSuccess: (user: User) => void;
   initialTab?: 'login' | 'signup';
+  onOpenChangeCredentials?: () => void;
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({
@@ -16,6 +17,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   onClose,
   onLoginSuccess,
   initialTab = 'login',
+  onOpenChangeCredentials,
 }) => {
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>(initialTab);
   const [signupRole, setSignupRole] = useState<'student' | 'teacher'>('student');
@@ -76,30 +78,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     } finally {
       setLoginLoading(false);
     }
-  };
-
-  // Quick Demo Login
-  const handleQuickLogin = (u: string, p: string) => {
-    setLoginUsername(u);
-    setLoginPassword(p);
-    setLoginError(null);
-    setTimeout(() => {
-      fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: u, password: p }),
-      })
-        .then((r) => r.json())
-        .then((data) => {
-          if (data.success && data.user) {
-            onLoginSuccess(data.user);
-            onClose();
-          } else {
-            setLoginError(data.message || data.error);
-          }
-        })
-        .catch(() => setLoginError('로그인 실패'));
-    }, 100);
   };
 
   // Handle Signup Submit
@@ -277,61 +255,21 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               {loginLoading ? '로그인 처리 중...' : '로그인'}
             </button>
 
-            {/* Quick Demo Login Badges */}
-            <div className="pt-4 mt-4 border-t border-slate-200/80 dark:border-slate-800">
-              <p className="text-[11px] font-bold text-slate-400 dark:text-slate-500 text-center mb-2.5">
-                ⚡ 빠른 시연을 위한 원클릭 계정 선택
-              </p>
-              <div className="grid grid-cols-2 gap-2">
+            {onOpenChangeCredentials && (
+              <div className="pt-3 text-center border-t border-slate-200/60 dark:border-slate-800">
                 <button
                   type="button"
-                  onClick={() => handleQuickLogin('admin', 'admin1234')}
-                  className="p-2.5 rounded-xl clay-btn bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-amber-800 dark:text-amber-200 text-xs font-bold text-left flex items-center gap-2"
+                  onClick={() => {
+                    onClose();
+                    onOpenChangeCredentials();
+                  }}
+                  className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:underline inline-flex items-center gap-1.5 transition"
                 >
-                  <span className="text-base">👑</span>
-                  <div>
-                    <div className="font-extrabold">관리자 (나)</div>
-                    <div className="text-[10px] text-amber-600 dark:text-amber-400 font-normal">승인권한 보유</div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleQuickLogin('teacher1', '1234')}
-                  className="p-2.5 rounded-xl clay-btn bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-200 text-xs font-bold text-left flex items-center gap-2"
-                >
-                  <span className="text-base">🏫</span>
-                  <div>
-                    <div className="font-extrabold">최서연 선생님</div>
-                    <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-normal">교직원 승인완료</div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleQuickLogin('student1', '1234')}
-                  className="p-2.5 rounded-xl clay-btn bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800/60 text-sky-800 dark:text-sky-200 text-xs font-bold text-left flex items-center gap-2"
-                >
-                  <span className="text-base">🎒</span>
-                  <div>
-                    <div className="font-extrabold">김민지 학생</div>
-                    <div className="text-[10px] text-sky-600 dark:text-sky-400 font-normal">학생 승인완료</div>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleQuickLogin('pending_student', '1234')}
-                  className="p-2.5 rounded-xl clay-btn bg-purple-50 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800/60 text-purple-800 dark:text-purple-200 text-xs font-bold text-left flex items-center gap-2"
-                >
-                  <span className="text-base">⏳</span>
-                  <div>
-                    <div className="font-extrabold">이지훈 (승인대기)</div>
-                    <div className="text-[10px] text-purple-600 dark:text-purple-400 font-normal">대기안내 테스트</div>
-                  </div>
+                  <KeyRound className="w-3.5 h-3.5" />
+                  <span>아이디 또는 비밀번호를 변경하시겠습니까?</span>
                 </button>
               </div>
-            </div>
+            )}
           </form>
         )}
 

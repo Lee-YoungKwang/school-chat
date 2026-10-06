@@ -12,6 +12,7 @@ import { SchoolQuizGame } from '@/components/SchoolQuizGame';
 import { RankingBoard } from '@/components/RankingBoard';
 import { AuthModal } from '@/components/AuthModal';
 import { AdminApprovalModal } from '@/components/AdminApprovalModal';
+import { ChangeCredentialsModal } from '@/components/ChangeCredentialsModal';
 import { 
   PlusCircle, 
   Sparkles, 
@@ -47,6 +48,7 @@ export default function Home() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authTab, setAuthTab] = useState<'login' | 'signup'>('login');
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+  const [isChangeCredentialsOpen, setIsChangeCredentialsOpen] = useState(false);
 
   // Sync dark mode class
   useEffect(() => {
@@ -283,6 +285,7 @@ export default function Home() {
         }}
         onLogout={handleLogout}
         onOpenAdminModal={() => setIsAdminModalOpen(true)}
+        onOpenChangeCredentials={() => setIsChangeCredentialsOpen(true)}
         pendingCount={pendingCount}
         isDark={isDark}
         onToggleDark={() => setIsDark(!isDark)}
@@ -482,6 +485,19 @@ export default function Home() {
         onClose={() => setIsAuthOpen(false)}
         onLoginSuccess={handleLoginSuccess}
         initialTab={authTab}
+        onOpenChangeCredentials={() => setIsChangeCredentialsOpen(true)}
+      />
+
+      <ChangeCredentialsModal
+        isOpen={isChangeCredentialsOpen}
+        onClose={() => setIsChangeCredentialsOpen(false)}
+        currentUser={currentUser}
+        onSuccess={(updatedUser) => {
+          if (currentUser && (currentUser.id === updatedUser.id || currentUser.username === updatedUser.username)) {
+            setCurrentUser(updatedUser);
+            localStorage.setItem('school_chat_user', JSON.stringify(updatedUser));
+          }
+        }}
       />
 
       <AdminApprovalModal

@@ -55,6 +55,30 @@ export const AdminApprovalModal: React.FC<AdminApprovalModalProps> = ({
 
   if (!isOpen) return null;
 
+  if (currentUser?.role !== 'admin') {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-fade-in">
+        <div className="relative w-full max-w-sm clay-card glass-panel p-6 text-center border border-white/60 dark:border-white/15">
+          <div className="w-12 h-12 clay-btn bg-rose-500 text-white rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-md">
+            <AlertTriangle className="w-6 h-6" />
+          </div>
+          <h3 className="text-base font-extrabold text-slate-800 dark:text-white mb-1.5">
+            접근 권한 제한
+          </h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mb-5 leading-relaxed">
+            회원 관리는 최고 관리자(admin) 계정으로 로그인한 경우에만 접근하실 수 있습니다.
+          </p>
+          <button
+            onClick={onClose}
+            className="w-full py-2.5 clay-btn bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md"
+          >
+            확인
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const handleUpdateStatus = async (userId: string, newStatus: UserStatus) => {
     setActionLoadingId(userId);
     setFeedbackMsg(null);
@@ -177,14 +201,14 @@ export const AdminApprovalModal: React.FC<AdminApprovalModalProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-xl font-extrabold text-slate-800 dark:text-white">
-                  👑 관리자(나) 승인 대시보드
+                  👑 회원 관리 (관리자 전용)
                 </h2>
                 <span className="px-2.5 py-0.5 rounded-full text-xs font-bold clay-badge bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300">
-                  최고 관리자 권한
+                  관리자 전용
                 </span>
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                학생 및 교직원 회원가입 신청 심사 및 계정 승인/반려 관리
+                가입 승인 대기 처리 및 전체 학생/교직원 명단 & 회원 권한 관리
               </p>
             </div>
           </div>
