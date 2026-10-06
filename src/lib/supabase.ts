@@ -20,7 +20,7 @@ let inMemoryRankings: Ranking[] = [...INITIAL_RANKINGS];
 export async function fetchPosts(channel?: ChannelId): Promise<Post[]> {
   if (isSupabaseConfigured && supabase) {
     try {
-      let query = supabase.from('posts').select('*').order('created_at', { ascending: false });
+      let query = supabase.from('posts').select('*, comments(*)').order('created_at', { ascending: false });
       if (channel) {
         query = query.eq('channel', channel);
       }
@@ -35,7 +35,14 @@ export async function fetchPosts(channel?: ChannelId): Promise<Post[]> {
           role: item.role || 'student',
           created_at: item.created_at,
           likes: Number(item.likes || 0),
-          comments: Array.isArray(item.comments) ? item.comments : [],
+          comments: Array.isArray(item.comments) ? item.comments.map((c: any) => ({
+            id: String(c.id),
+            postId: String(c.post_id),
+            author: c.author,
+            content: c.content,
+            role: c.role || 'student',
+            created_at: c.created_at,
+          })) : [],
           tag: item.tag || undefined,
           isStaffOnly: item.channel === 'teacher-lounge' || item.is_staff_only,
         }));
