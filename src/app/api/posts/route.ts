@@ -15,7 +15,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { title, content, author, channel, role, tag } = body;
+    const { title, content, author, channel, role, tag, images, attachments } = body;
     if (!title || !content || !author || !channel) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
@@ -26,6 +26,8 @@ export async function POST(request: Request) {
       channel,
       role: role || 'student',
       tag,
+      images: Array.isArray(images) ? images : [],
+      attachments: Array.isArray(attachments) ? attachments : [],
     });
     return NextResponse.json(newPost, { status: 201 });
   } catch (error) {

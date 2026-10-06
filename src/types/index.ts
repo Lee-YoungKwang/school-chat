@@ -36,6 +36,13 @@ export interface Comment {
   created_at: string;
 }
 
+export interface Attachment {
+  name: string;
+  url: string;
+  size?: number;
+  type?: string;
+}
+
 export interface Post {
   id: string;
   channel: ChannelId;
@@ -49,6 +56,8 @@ export interface Post {
   comments: Comment[];
   tag?: string;
   isStaffOnly?: boolean;
+  images?: string[];
+  attachments?: Attachment[];
 }
 
 export interface Ranking {

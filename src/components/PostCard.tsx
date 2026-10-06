@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { Post, UserRole, User } from '@/types';
 import { CHANNELS } from '@/data/mockData';
-import { Heart, MessageCircle, Send, Shield, User as UserIcon, Clock, Tag, Crown } from 'lucide-react';
+import { Heart, MessageCircle, Send, Shield, User as UserIcon, Clock, Tag, Crown, FileText, Download, Eye, X } from 'lucide-react';
 
 interface PostCardProps {
   post: Post;
@@ -23,6 +23,7 @@ export const PostCard: React.FC<PostCardProps> = ({
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [isLikedAnim, setIsLikedAnim] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const channelObj = CHANNELS.find((c) => c.id === post.channel);
 
@@ -106,6 +107,59 @@ export const PostCard: React.FC<PostCardProps> = ({
       <p className="text-sm sm:text-base font-normal text-slate-600 dark:text-slate-300 mb-4 whitespace-pre-wrap leading-relaxed">
         {post.content}
       </p>
+
+      {/* Attached Images Gallery */}
+      {post.images && post.images.length > 0 && (
+        <div className="mb-4">
+          <div className={`grid gap-2.5 ${
+            post.images.length === 1 
+              ? 'grid-cols-1 max-w-lg' 
+              : post.images.length === 2 
+              ? 'grid-cols-2' 
+              : 'grid-cols-2 sm:grid-cols-3'
+          }`}>
+            {post.images.map((imgSrc, idx) => (
+              <div 
+                key={idx} 
+                onClick={() => setSelectedImage(imgSrc)}
+                className="relative group rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-700 aspect-video sm:aspect-square bg-slate-100 dark:bg-slate-800 cursor-pointer shadow-sm hover:opacity-95 transition"
+              >
+                <img
+                  src={imgSrc}
+                  alt={`첨부 이미지 ${idx + 1}`}
+                  className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                />
+                <div className="absolute inset-0 bg-black/25 opacity-0 group-hover:opacity-100 transition flex items-center justify-center text-white">
+                  <Eye className="w-6 h-6 drop-shadow-md" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Attached Files List */}
+      {post.attachments && post.attachments.length > 0 && (
+        <div className="mb-4 flex flex-wrap gap-2">
+          {post.attachments.map((file, idx) => (
+            <a
+              key={idx}
+              href={file.url}
+              download={file.name}
+              className="inline-flex items-center gap-2 py-2 px-3.5 rounded-xl clay-card bg-slate-50/90 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-300 hover:border-indigo-300 transition shadow-sm"
+            >
+              <FileText className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+              <span className="truncate max-w-[200px] sm:max-w-xs">{file.name}</span>
+              {file.size && (
+                <span className="text-[10px] text-slate-400 font-mono">
+                  ({file.size < 1024 * 1024 ? `${(file.size / 1024).toFixed(0)}KB` : `${(file.size / (1024 * 1024)).toFixed(1)}MB`})
+                </span>
+              )}
+              <Download className="w-3.5 h-3.5 text-indigo-500 shrink-0 ml-1" />
+            </a>
+          ))}
+        </div>
+      )}
 
       {/* Author & Actions Bar */}
       <div className="pt-3.5 border-t border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
@@ -231,6 +285,28 @@ export const PostCard: React.FC<PostCardProps> = ({
               <span>등록</span>
             </button>
           </form>
+        </div>
+      )}
+
+      {/* Enlarged Image Preview Modal */}
+      {selectedImage && (
+        <div 
+          onClick={() => setSelectedImage(null)}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in cursor-zoom-out"
+        >
+          <div className="relative max-w-4xl max-h-[90vh] overflow-hidden rounded-3xl clay-card">
+            <button
+              onClick={() => setSelectedImage(null)}
+              className="absolute top-3 right-3 p-2 bg-black/60 text-white rounded-full hover:bg-black/80 transition z-10"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <img
+              src={selectedImage}
+              alt="확대 이미지"
+              className="max-w-full max-h-[85vh] object-contain rounded-2xl"
+            />
+          </div>
         </div>
       )}
     </article>

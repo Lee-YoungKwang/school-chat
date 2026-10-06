@@ -1,9 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
-import { ChannelId, UserRole, User } from '@/types';
+import React, { useState, useRef } from 'react';
+import { ChannelId, UserRole, User, Attachment } from '@/types';
 import { CHANNELS } from '@/data/mockData';
-import { X, Send, PenTool, Sparkles, Shield, AlertCircle } from 'lucide-react';
+import { 
+  X, Send, PenTool, Sparkles, Shield, AlertCircle, 
+  Image as ImageIcon, Paperclip, FileText, Trash2, UploadCloud 
+} from 'lucide-react';
 
 interface CreatePostModalProps {
   isOpen: boolean;
@@ -17,6 +20,8 @@ interface CreatePostModalProps {
     author: string;
     role: UserRole;
     tag?: string;
+    images?: string[];
+    attachments?: Attachment[];
   }) => void;
 }
 
@@ -34,12 +39,105 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [tag, setTag] = useState('');
+  const [images, setImages] = useState<string[]>([]);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [errorMsg, setErrorMsg] = useState('');
+  const [uploading, setUploading] = useState(false);
+
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
 
   const authorName = currentUser?.name || '익명 작성자';
   const authorRole: UserRole = currentUser?.role || 'student';
+
+  // Handle Photo/Image selection
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
+    const newImagePromises: Promise<string>[] = [];
+
+    Array.from(files).forEach((file) => {
+      // Check file size (e.g., max 5MB per image)
+      if (file.size > 8 * 1024 * 1024) {
+        setErrorMsg('이미지 파일 크기는 8MB 이하여야 합니다.');
+        return;
+      }
+
+      const promise = new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.readAsDataURL(file);
+      });
+      newImagePromises.push(promise);
+    });
+
+    Promise.all(newImagePromises)
+      .then((newImages) => {
+        setImages((prev) => [...prev, ...newImages]);
+      })
+      .finally(() => {
+        setUploading(false);
+        if (imageInputRef.current) imageInputRef.current.value = '';
+      });
+  };
+
+  // Handle File selection (PDF, HWP, DOCX, etc.)
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
+    const newFilePromises: Promise<Attachment>[] = [];
+
+    Array.from(files).forEach((file) => {
+      if (file.size > 15 * 1024 * 1024) {
+        setErrorMsg('첨부 파일 크기는 15MB 이하여야 합니다.');
+        return;
+      }
+
+      const promise = new Promise<Attachment>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          resolve({
+            name: file.name,
+            url: reader.result as string,
+            size: file.size,
+            type: file.type || 'file',
+          });
+        };
+        reader.readAsDataURL(file);
+      });
+      newFilePromises.push(promise);
+    });
+
+    Promise.all(newFilePromises)
+      .then((newAtts) => {
+        setAttachments((prev) => [...prev, ...newAtts]);
+      })
+      .finally(() => {
+        setUploading(false);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+      });
+  };
+
+  const removeImage = (index: number) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const formatFileSize = (bytes?: number) => {
+    if (!bytes) return '';
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,14 +160,22 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
       author: authorName,
       role: authorRole,
       tag: tag.trim() || undefined,
+      images,
+      attachments,
     });
 
+    // Reset
+    setTitle('');
+    setContent('');
+    setTag('');
+    setImages([]);
+    setAttachments([]);
     onClose();
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-fade-in">
-      <div className="relative w-full max-w-lg clay-card glass-panel overflow-hidden border border-white/60 dark:border-white/15 p-6 md:p-8 max-h-[92vh] overflow-y-auto">
+      <div className="relative w-full max-w-xl clay-card glass-panel overflow-hidden border border-white/60 dark:border-white/15 p-6 md:p-8 max-h-[92vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-indigo-100 dark:border-slate-800">
           <div className="flex items-center gap-3">
@@ -82,7 +188,7 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
                 <Sparkles className="w-4 h-4 text-amber-500 fill-amber-400" />
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                학교 공동체와 함께 나누고 싶은 이야기를 적어주세요.
+                사진과 파일 첨부를 지원하는 학교 소통 공간입니다.
               </p>
             </div>
           </div>
@@ -163,7 +269,7 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
             </label>
             <input
               type="text"
-              placeholder="예: 급식자랑, 축제, 분실물"
+              placeholder="예: 급식자랑, 축제, 분실물, 공지사항"
               value={tag}
               onChange={(e) => setTag(e.target.value)}
               className="w-full px-3.5 py-2 text-xs clay-input text-slate-800 dark:text-white"
@@ -177,7 +283,7 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
             </label>
             <textarea
               required
-              rows={5}
+              rows={4}
               placeholder="서로를 배려하는 따뜻한 학교 대화 문화를 만들어가요."
               value={content}
               onChange={(e) => setContent(e.target.value)}
@@ -185,14 +291,125 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
             />
           </div>
 
+          {/* Attachments Section: Photos & Files */}
+          <div className="p-3.5 rounded-2xl clay-card bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-extrabold text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+                <Paperclip className="w-3.5 h-3.5 text-indigo-500" />
+                사진 및 파일 첨부
+              </span>
+
+              {/* Upload Trigger Buttons */}
+              <div className="flex items-center gap-2">
+                {/* Image Upload Input & Button */}
+                <input
+                  ref={imageInputRef}
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => imageInputRef.current?.click()}
+                  className="clay-btn px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 text-xs font-bold rounded-xl flex items-center gap-1"
+                >
+                  <ImageIcon className="w-3.5 h-3.5" />
+                  <span>사진 추가</span>
+                </button>
+
+                {/* File Upload Input & Button */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.hwp,.hwpx,.txt,.zip,.ppt,.pptx"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="clay-btn px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-200 text-xs font-bold rounded-xl flex items-center gap-1"
+                >
+                  <Paperclip className="w-3.5 h-3.5" />
+                  <span>파일 첨부</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Uploaded Images Preview Thumbnails */}
+            {images.length > 0 && (
+              <div className="pt-2">
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 mb-1.5 block">
+                  첨부된 사진 ({images.length}장)
+                </span>
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                  {images.map((imgSrc, idx) => (
+                    <div key={idx} className="relative group rounded-xl overflow-hidden aspect-square border border-slate-200 dark:border-slate-700 shadow-sm">
+                      <img
+                        src={imgSrc}
+                        alt={`첨부 이미지 ${idx + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(idx)}
+                        className="absolute top-1 right-1 p-1 bg-rose-600 text-white rounded-full shadow-md opacity-90 hover:opacity-100 hover:scale-110 transition"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Uploaded Documents List */}
+            {attachments.length > 0 && (
+              <div className="pt-2 space-y-1.5">
+                <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">
+                  첨부된 파일 ({attachments.length}개)
+                </span>
+                {attachments.map((file, idx) => (
+                  <div
+                    key={idx}
+                    className="p-2 rounded-xl bg-white dark:bg-slate-700/80 border border-slate-200 dark:border-slate-600 flex items-center justify-between gap-2 text-xs"
+                  >
+                    <div className="flex items-center gap-2 truncate">
+                      <FileText className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      <span className="font-semibold text-slate-800 dark:text-white truncate">
+                        {file.name}
+                      </span>
+                      {file.size && (
+                        <span className="text-[10px] text-slate-400 shrink-0 font-mono">
+                          ({formatFileSize(file.size)})
+                        </span>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => removeAttachment(idx)}
+                      className="p-1 text-slate-400 hover:text-rose-500 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-600 transition shrink-0"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Submit Button */}
           <div className="pt-2">
             <button
               type="submit"
+              disabled={uploading}
               className="w-full py-3 clay-btn bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-sm rounded-2xl transition shadow-lg flex items-center justify-center gap-2"
             >
               <Send className="w-4 h-4" />
-              <span>게시글 등록하기</span>
+              <span>{uploading ? '파일 처리 중...' : '게시글 등록하기'}</span>
             </button>
           </div>
         </form>

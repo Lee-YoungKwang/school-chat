@@ -1,15 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ChannelId, UserRole, Post, Ranking, User } from '@/types';
-import { CHANNELS, INITIAL_POSTS, INITIAL_RANKINGS, INITIAL_USERS } from '@/data/mockData';
+import { ChannelId, UserRole, Post, User, Attachment } from '@/types';
+import { CHANNELS, INITIAL_POSTS, INITIAL_USERS } from '@/data/mockData';
 import { Header } from '@/components/Header';
 import { ChannelNav } from '@/components/ChannelNav';
 import { PostCard } from '@/components/PostCard';
 import { CreatePostModal } from '@/components/CreatePostModal';
 import { TeacherVerifyModal } from '@/components/TeacherVerifyModal';
-import { SchoolQuizGame } from '@/components/SchoolQuizGame';
-import { RankingBoard } from '@/components/RankingBoard';
 import { AuthModal } from '@/components/AuthModal';
 import { AdminApprovalModal } from '@/components/AdminApprovalModal';
 import { ChangeCredentialsModal } from '@/components/ChangeCredentialsModal';
@@ -19,18 +17,17 @@ import {
   Sparkles, 
   Search, 
   Zap, 
-  Database,
-  Crown,
-  School,
-  GraduationCap,
-  ShieldCheck,
-  CheckCircle2,
-  LogIn
+  Database, 
+  Crown, 
+  School, 
+  GraduationCap, 
+  ShieldCheck, 
+  CheckCircle2, 
+  LogIn 
 } from 'lucide-react';
 
 export default function Home() {
   const [posts, setPosts] = useState<Post[]>(INITIAL_POSTS);
-  const [rankings, setRankings] = useState<Ranking[]>(INITIAL_RANKINGS);
   const [activeChannel, setActiveChannel] = useState<ChannelId | 'all'>('all');
   const [isDark, setIsDark] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -43,9 +40,6 @@ export default function Home() {
   // Modals
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isTeacherVerifyOpen, setIsTeacherVerifyOpen] = useState(false);
-  const [isQuizOpen, setIsQuizOpen] = useState(false);
-  const [isRankingOpen, setIsRankingOpen] = useState(false);
-  const [isRankingLoading, setIsRankingLoading] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authTab, setAuthTab] = useState<'login' | 'signup'>('login');
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
@@ -74,9 +68,8 @@ export default function Home() {
 
     const loadInitialData = async () => {
       try {
-        const [resPosts, resRankings, resUsers] = await Promise.all([
+        const [resPosts, resUsers] = await Promise.all([
           fetch('/api/posts'),
-          fetch('/api/ranking'),
           fetch('/api/admin/users'),
         ]);
 
@@ -84,13 +77,6 @@ export default function Home() {
           const data = await resPosts.json();
           if (Array.isArray(data) && data.length > 0) {
             setPosts(data);
-          }
-        }
-
-        if (resRankings.ok) {
-          const rData = await resRankings.json();
-          if (Array.isArray(rData) && rData.length > 0) {
-            setRankings(rData);
           }
         }
 
@@ -145,10 +131,14 @@ export default function Home() {
     author: string;
     role: UserRole;
     tag?: string;
+    images?: string[];
+    attachments?: Attachment[];
   }) => {
     const optimisticPost: Post = {
       id: 'local_' + Date.now(),
       ...newPostData,
+      images: newPostData.images || [],
+      attachments: newPostData.attachments || [],
       created_at: new Date().toISOString(),
       likes: 0,
       comments: [],
@@ -218,42 +208,6 @@ export default function Home() {
     }
   };
 
-  // Ranking Actions
-  const handleSubmitQuizScore = async (nickname: string, score: number) => {
-    const optimisticRanking: Ranking = {
-      id: 'rank_' + Date.now(),
-      nickname,
-      score,
-      played_at: new Date().toISOString(),
-    };
-    setRankings((prev) =>
-      [optimisticRanking, ...prev].sort((a, b) => b.score - a.score)
-    );
-
-    try {
-      await fetch('/api/ranking', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nickname, score }),
-      });
-    } catch (e) {
-      console.warn('Ranking submission error');
-    }
-  };
-
-  const handleRefreshRankings = async () => {
-    setIsRankingLoading(true);
-    try {
-      const res = await fetch('/api/ranking');
-      if (res.ok) {
-        const data = await res.json();
-        setRankings(data);
-      }
-    } finally {
-      setIsRankingLoading(false);
-    }
-  };
-
   // Filter posts
   const filteredPosts = posts.filter((post) => {
     if (activeChannel !== 'all' && post.channel !== activeChannel) {
@@ -292,88 +246,55 @@ export default function Home() {
         pendingCount={pendingCount}
         isDark={isDark}
         onToggleDark={() => setIsDark(!isDark)}
-        onOpenQuiz={() => setIsQuizOpen(true)}
-        onOpenRanking={() => setIsRankingOpen(true)}
       />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-8 w-full flex-1">
-        {/* Banner Card: Pure Glassmorphism + Claymorphism Fusion */}
-        <div className="clay-card glass-panel p-6 sm:p-8 mb-8 bg-gradient-to-r from-indigo-50/70 via-purple-50/50 to-pink-50/60 dark:from-slate-800/80 dark:via-indigo-950/40 dark:to-slate-800/80 border border-white/80 dark:border-white/10">
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-            <div className="space-y-2">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full clay-badge bg-white/90 dark:bg-slate-800 text-indigo-700 dark:text-indigo-300 text-xs font-bold">
-                <Sparkles className="w-3.5 h-3.5 text-amber-500 fill-amber-400" />
-                <span>글래스모피즘 & 클레이모피즘 소통 광장</span>
-              </div>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-slate-800 dark:text-white leading-tight">
-                따뜻하고 안전한 학교 소통 공간, <br className="hidden sm:inline" />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400">
-                  학교 대화 사이트
-                </span>
-                에 오신 것을 환영합니다!
-              </h2>
-              <p className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-300 max-w-xl leading-relaxed">
-                중학생과 교직원이 따로 안전하게 가입하고, <strong>관리자(나)의 승인</strong>을 거쳐 
-                신뢰할 수 있는 학급 공지, 자유 소통, 분실물 찾기를 나눕니다.
-              </p>
+      <main className="max-w-7xl mx-auto px-4 sm:px-8 w-full flex-1 pt-4">
+        {/* Clean Quick Action Bar (Replacing Tall Banner) */}
+        <div className="clay-card glass-panel p-4 sm:p-5 mb-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 border border-white/80 dark:border-white/10">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 clay-btn bg-indigo-600 text-white rounded-2xl flex items-center justify-center text-xl shadow-md shrink-0">
+              🏫
             </div>
-
-            {/* Quick Action Buttons */}
-            <div className="flex flex-col sm:flex-row md:flex-col gap-3 w-full sm:w-auto shrink-0">
-              <button
-                onClick={() => {
-                  if (!currentUser) {
-                    setAuthTab('login');
-                    setIsAuthOpen(true);
-                  } else {
-                    setIsCreateModalOpen(true);
-                  }
-                }}
-                className="clay-btn px-6 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-sm font-extrabold flex items-center justify-center gap-2 shadow-lg"
-              >
-                <PlusCircle className="w-5 h-5" />
-                <span>새 글 / 방명록 작성</span>
-              </button>
-
-              <button
-                onClick={() => setIsQuizOpen(true)}
-                className="clay-btn px-6 py-3 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-2xl text-sm font-bold flex items-center justify-center gap-2"
-              >
-                <Sparkles className="w-4 h-4 text-amber-500" />
-                <span>학교 상식 퀴즈 풀기</span>
-              </button>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base sm:text-lg font-extrabold text-slate-800 dark:text-white">
+                  학교 대화 광장
+                </h2>
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full clay-badge bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+                  실시간 소통
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                학생과 교직원이 함께하는 따뜻하고 안전한 소통 공간입니다.
+              </p>
             </div>
           </div>
 
-          {/* User Status Bar & Region Indicator */}
-          <div className="mt-6 pt-4 border-t border-slate-200/80 dark:border-slate-700/80 flex flex-wrap items-center justify-between text-xs font-semibold gap-3 text-slate-600 dark:text-slate-300">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-bold">
-                <Zap className="w-4 h-4 fill-emerald-500" />
-                <span>Vercel Serverless: <strong>Seoul (icn1)</strong></span>
-              </div>
-              <span className="text-slate-300 dark:text-slate-600">|</span>
-              <div className="flex items-center gap-1.5 text-indigo-700 dark:text-indigo-400 font-bold">
-                <Database className="w-4 h-4" />
-                <span>Supabase: <strong>Seoul (ap-northeast-2)</strong></span>
-              </div>
-            </div>
+          <div className="flex items-center gap-2.5 shrink-0">
+            {currentUser?.role === 'admin' && (
+              <button
+                onClick={() => setIsAdminModalOpen(true)}
+                className="px-3 py-2 rounded-xl clay-btn bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs flex items-center gap-1.5 shadow-sm transition"
+              >
+                <Crown className="w-3.5 h-3.5" />
+                <span>승인 대기 ({pendingCount}건)</span>
+              </button>
+            )}
 
-            {/* Role & Approval Quick Info */}
-            <div className="flex items-center gap-2">
-              {currentUser?.role === 'admin' && (
-                <button
-                  onClick={() => setIsAdminModalOpen(true)}
-                  className="px-3 py-1 rounded-full clay-btn bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-[11px] flex items-center gap-1.5 shadow-sm"
-                >
-                  <Crown className="w-3.5 h-3.5" />
-                  <span>관리자 승인 대기 ({pendingCount}건)</span>
-                </button>
-              )}
-              <div className="text-[11px] bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 px-3 py-1 rounded-full font-bold clay-badge">
-                ⚡ 쿼리 지연시간 RTT &lt; 5ms 최적화 완료
-              </div>
-            </div>
+            <button
+              onClick={() => {
+                if (!currentUser) {
+                  setAuthTab('login');
+                  setIsAuthOpen(true);
+                } else {
+                  setIsCreateModalOpen(true);
+                }
+              }}
+              className="px-4 py-2.5 clay-btn bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs sm:text-sm font-extrabold flex items-center justify-center gap-2 shadow-md transition"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>새 글 / 방명록 작성 (사진·파일 첨부)</span>
+            </button>
           </div>
         </div>
 
@@ -524,20 +445,6 @@ export default function Home() {
         onSuccess={() => {
           setActiveChannel('teacher-lounge');
         }}
-      />
-
-      <SchoolQuizGame
-        isOpen={isQuizOpen}
-        onClose={() => setIsQuizOpen(false)}
-        onSubmitScore={handleSubmitQuizScore}
-      />
-
-      <RankingBoard
-        isOpen={isRankingOpen}
-        onClose={() => setIsRankingOpen(false)}
-        rankings={rankings}
-        onRefresh={handleRefreshRankings}
-        isLoading={isRankingLoading}
       />
 
       <SchoolChatbot

@@ -46,6 +46,8 @@ export async function fetchPosts(channel?: ChannelId): Promise<Post[]> {
           })) : [],
           tag: item.tag || undefined,
           isStaffOnly: item.channel === 'teacher-lounge' || item.is_staff_only,
+          images: Array.isArray(item.images) ? item.images : [],
+          attachments: Array.isArray(item.attachments) ? item.attachments : [],
         }));
       }
     } catch (e) {
@@ -67,6 +69,8 @@ export async function insertPost(postData: Omit<Post, 'id' | 'created_at' | 'lik
     created_at: new Date().toISOString(),
     likes: 0,
     comments: [],
+    images: postData.images || [],
+    attachments: postData.attachments || [],
   };
 
   if (isSupabaseConfigured && supabase) {
@@ -81,6 +85,8 @@ export async function insertPost(postData: Omit<Post, 'id' | 'created_at' | 'lik
           tag: newPost.tag,
           likes: 0,
           created_at: newPost.created_at,
+          images: newPost.images,
+          attachments: newPost.attachments,
         }
       ]).select().single();
       

@@ -17,8 +17,6 @@ interface HeaderProps {
   pendingCount: number;
   isDark: boolean;
   onToggleDark: () => void;
-  onOpenQuiz: () => void;
-  onOpenRanking: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -31,8 +29,6 @@ export const Header: React.FC<HeaderProps> = ({
   pendingCount,
   isDark,
   onToggleDark,
-  onOpenQuiz,
-  onOpenRanking,
 }) => {
   return (
     <header className="sticky top-0 z-40 w-full glass-panel border-b border-white/60 dark:border-white/10 px-4 py-3 sm:px-8 mb-6 shadow-sm">
@@ -62,25 +58,7 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         {/* Center / Action Buttons */}
-        <div className="flex flex-wrap items-center justify-center gap-2">
-          {/* Quiz Game Button */}
-          <button
-            onClick={onOpenQuiz}
-            className="clay-btn px-3.5 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-200 text-xs sm:text-sm font-bold flex items-center gap-1.5"
-          >
-            <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-            <span>학교 퀴즈 게임</span>
-          </button>
-
-          {/* Ranking Board Button */}
-          <button
-            onClick={onOpenRanking}
-            className="clay-btn px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-200 text-xs sm:text-sm font-bold flex items-center gap-1.5"
-          >
-            <Trophy className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-            <span>명예의 전당</span>
-          </button>
-
+        <div className="flex flex-wrap items-center justify-center gap-2.5">
           {/* AI Chatbot Button */}
           <button
             onClick={onOpenChatbot}
@@ -94,13 +72,13 @@ export const Header: React.FC<HeaderProps> = ({
           {currentUser?.role === 'admin' && (
             <button
               onClick={onOpenAdminModal}
-              className="clay-btn px-3.5 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs sm:text-sm font-black flex items-center gap-1.5 shadow-md relative"
-              title="관리자 전용 회원 관리 센터"
+              className="clay-btn px-4 py-2 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 hover:scale-105 text-white text-xs sm:text-sm font-black flex items-center gap-1.5 shadow-lg relative"
+              title="관리자 전용 전체 회원 관리 센터"
             >
-              <Crown className="w-4 h-4 text-amber-200" />
-              <span>👑 회원 관리</span>
+              <Crown className="w-4 h-4 text-amber-200 fill-amber-200" />
+              <span>👑 전체 회원 관리</span>
               {pendingCount > 0 && (
-                <span className="ml-1 px-1.5 py-0.2 bg-rose-500 text-white text-[10px] font-black rounded-full shadow-sm animate-pulse">
+                <span className="ml-1 px-2 py-0.2 bg-rose-500 text-white text-[11px] font-black rounded-full shadow-md animate-bounce">
                   {pendingCount}
                 </span>
               )}
