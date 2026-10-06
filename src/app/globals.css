@@ -3,17 +3,39 @@
 @tailwind utilities;
 
 :root {
-  --bg-gradient-start: #FAF5FF;
+  --bg-gradient-start: #EEF2FF;
   --bg-gradient-mid: #F0FDF4;
-  --bg-gradient-end: #FEF9C3;
-  --text-main: #18181B;
+  --bg-gradient-end: #FFFBEB;
+  --text-main: #1E293B;
+  --text-muted: #64748B;
+  
+  /* Clay light mode shadows */
+  --clay-bg: #FFFFFF;
+  --clay-shadow-out: 8px 12px 24px rgba(160, 175, 205, 0.35), -8px -8px 20px rgba(255, 255, 255, 0.9);
+  --clay-shadow-in: inset 3px 3px 6px rgba(255, 255, 255, 0.9), inset -3px -3px 6px rgba(160, 175, 205, 0.15);
+  
+  /* Glass light mode */
+  --glass-bg: rgba(255, 255, 255, 0.72);
+  --glass-border: rgba(255, 255, 255, 0.75);
+  --glass-shadow: 0 12px 32px 0 rgba(99, 102, 241, 0.08);
 }
 
 .dark {
-  --bg-gradient-start: #0F172A;
-  --bg-gradient-mid: #1E1B4B;
-  --bg-gradient-end: #172554;
-  --text-main: #F8FAFC;
+  --bg-gradient-start: #0B0F19;
+  --bg-gradient-mid: #111827;
+  --bg-gradient-end: #172033;
+  --text-main: #F1F5F9;
+  --text-muted: #94A3B8;
+
+  /* Clay dark mode shadows */
+  --clay-bg: #1E293B;
+  --clay-shadow-out: 8px 12px 24px rgba(0, 0, 0, 0.5), -6px -6px 16px rgba(255, 255, 255, 0.04);
+  --clay-shadow-in: inset 2px 2px 4px rgba(255, 255, 255, 0.12), inset -2px -2px 4px rgba(0, 0, 0, 0.4);
+
+  /* Glass dark mode */
+  --glass-bg: rgba(30, 41, 59, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-shadow: 0 12px 32px 0 rgba(0, 0, 0, 0.35);
 }
 
 body {
@@ -22,101 +44,164 @@ body {
   min-height: 100vh;
   font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
   overflow-x: hidden;
+  letter-spacing: -0.015em;
 }
 
-/* Glassmorphism Styles */
+/* ========================================================
+   1. Glassmorphism Styles (글래스모피즘)
+   ======================================================== */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 3px solid #000000;
-}
-
-.dark .glass-panel {
-  background: rgba(15, 23, 42, 0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 3px solid #E2E8F0;
-  box-shadow: 4px 4px 0px #E2E8F0 !important;
-}
-
-/* Claymorphic 3D Volume Cards */
-.clay-box {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1.5px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
   border-radius: 1.5rem;
-  box-shadow: 
-    inset -4px -4px 8px rgba(0, 0, 0, 0.1),
-    inset 4px 4px 8px rgba(255, 255, 255, 0.9),
-    5px 5px 0px #000000;
-  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.clay-box:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 
-    inset -4px -4px 8px rgba(0, 0, 0, 0.12),
-    inset 4px 4px 8px rgba(255, 255, 255, 1),
-    7px 7px 0px #000000;
+.glass-pill {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
 }
 
-.dark .clay-box {
-  box-shadow: 
-    inset -4px -4px 8px rgba(0, 0, 0, 0.6),
-    inset 4px 4px 8px rgba(255, 255, 255, 0.15),
-    5px 5px 0px #FFFFFF;
+.dark .glass-pill {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-.dark .clay-box:hover {
-  box-shadow: 
-    inset -4px -4px 8px rgba(0, 0, 0, 0.7),
-    inset 4px 4px 8px rgba(255, 255, 255, 0.2),
-    7px 7px 0px #FFFFFF;
+/* ========================================================
+   2. Claymorphism Styles (클레이모피즘)
+   ======================================================== */
+.clay-card {
+  background: var(--clay-bg);
+  border-radius: 1.75rem;
+  box-shadow: var(--clay-shadow-out), var(--clay-shadow-in);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Neo-Brutalist Interactive Button */
-.neo-btn {
-  border: 3px solid #000000;
-  box-shadow: 4px 4px 0px #000000;
+.dark .clay-card {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.clay-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 
+    10px 16px 28px rgba(160, 175, 205, 0.4), 
+    -8px -8px 24px rgba(255, 255, 255, 0.95), 
+    var(--clay-shadow-in);
+}
+
+.dark .clay-card:hover {
+  box-shadow: 
+    10px 16px 30px rgba(0, 0, 0, 0.65), 
+    -6px -6px 18px rgba(255, 255, 255, 0.06), 
+    var(--clay-shadow-in);
+}
+
+/* 3D Tactile Clay Button */
+.clay-btn {
+  border-radius: 1.25rem;
   font-weight: 700;
-  transition: all 0.15s ease-in-out;
+  box-shadow: 
+    5px 6px 14px rgba(0, 0, 0, 0.08),
+    -3px -3px 8px rgba(255, 255, 255, 0.8),
+    inset 2px 2px 3px rgba(255, 255, 255, 0.7),
+    inset -2px -2px 4px rgba(0, 0, 0, 0.08);
+  transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
 }
 
-.neo-btn:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0px #000000;
+.clay-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    6px 9px 18px rgba(0, 0, 0, 0.12),
+    -4px -4px 10px rgba(255, 255, 255, 0.9),
+    inset 2px 2px 3px rgba(255, 255, 255, 0.8),
+    inset -2px -2px 4px rgba(0, 0, 0, 0.06);
 }
 
-.neo-btn:active {
-  transform: translate(2px, 2px);
-  box-shadow: 1px 1px 0px #000000;
+.clay-btn:active {
+  transform: translateY(2px) scale(0.98);
+  box-shadow: 
+    2px 2px 4px rgba(0, 0, 0, 0.12),
+    inset 3px 3px 6px rgba(0, 0, 0, 0.15),
+    inset -2px -2px 4px rgba(255, 255, 255, 0.6);
 }
 
-.dark .neo-btn {
-  border: 3px solid #FFFFFF;
-  box-shadow: 4px 4px 0px #FFFFFF;
+/* Clay Inset Input Field */
+.clay-input {
+  border-radius: 1.25rem;
+  background: rgba(248, 250, 252, 0.9);
+  border: 1.5px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 
+    inset 3px 3px 6px rgba(0, 0, 0, 0.06),
+    inset -2px -2px 5px rgba(255, 255, 255, 0.9);
+  transition: all 0.2s ease-in-out;
 }
 
-.dark .neo-btn:hover {
-  box-shadow: 6px 6px 0px #FFFFFF;
+.clay-input:focus {
+  background: #FFFFFF;
+  border-color: #6366F1;
+  outline: none;
+  box-shadow: 
+    inset 2px 2px 4px rgba(99, 102, 241, 0.1),
+    0 0 0 4px rgba(99, 102, 241, 0.15);
 }
 
-.dark .neo-btn:active {
-  box-shadow: 1px 1px 0px #FFFFFF;
+.dark .clay-input {
+  background: rgba(15, 23, 42, 0.7);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 
+    inset 3px 3px 6px rgba(0, 0, 0, 0.5),
+    inset -2px -2px 5px rgba(255, 255, 255, 0.05);
+}
+
+.dark .clay-input:focus {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: #818CF8;
+  box-shadow: 
+    inset 2px 2px 4px rgba(0, 0, 0, 0.4),
+    0 0 0 4px rgba(129, 140, 248, 0.2);
+}
+
+/* Clay Badge */
+.clay-badge {
+  border-radius: 9999px;
+  box-shadow: 
+    3px 3px 8px rgba(0, 0, 0, 0.06),
+    -2px -2px 6px rgba(255, 255, 255, 0.8),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.8),
+    inset -1px -1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.dark .clay-badge {
+  box-shadow: 
+    3px 3px 8px rgba(0, 0, 0, 0.4),
+    -1px -1px 4px rgba(255, 255, 255, 0.05),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.15),
+    inset -1px -1px 2px rgba(0, 0, 0, 0.3);
 }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #F1F5F9;
-  border-left: 2px solid #000000;
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #FFDE00;
-  border: 2px solid #000000;
+  background: rgba(148, 163, 184, 0.4);
   border-radius: 999px;
+  backdrop-filter: blur(4px);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #FF3366;
+  background: rgba(99, 102, 241, 0.6);
 }

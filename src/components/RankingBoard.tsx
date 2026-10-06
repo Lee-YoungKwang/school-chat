@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Ranking } from '@/types';
-import { Trophy, Medal, Flame, X, RefreshCw } from 'lucide-react';
+import { Trophy, Flame, X, RefreshCw } from 'lucide-react';
 
 interface RankingBoardProps {
   isOpen: boolean;
@@ -24,70 +24,83 @@ export const RankingBoard: React.FC<RankingBoardProps> = ({
   const getRankBadge = (index: number) => {
     switch (index) {
       case 0:
-        return <span className="text-xl">🥇</span>;
+        return <span className="text-2xl">🥇</span>;
       case 1:
-        return <span className="text-xl">🥈</span>;
+        return <span className="text-2xl">🥈</span>;
       case 2:
-        return <span className="text-xl">🥉</span>;
+        return <span className="text-2xl">🥉</span>;
       default:
-        return <span className="font-black text-slate-700 text-sm">{index + 1}위</span>;
+        return (
+          <span className="w-7 h-7 rounded-full clay-badge bg-slate-100 dark:bg-slate-700 flex items-center justify-center font-extrabold text-xs text-slate-700 dark:text-slate-300">
+            {index + 1}
+          </span>
+        );
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white border-3 border-black dark:border-white rounded-3xl p-6 sm:p-8 shadow-brutal-lg max-h-[85vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-fade-in">
+      <div className="relative w-full max-w-lg clay-card glass-panel border border-white/60 dark:border-white/15 p-6 sm:p-8 max-h-[85vh] flex flex-col shadow-2xl">
         {/* Close Button */}
         <button
           onClick={onClose}
           aria-label="Close"
-          className="absolute top-5 right-5 p-1.5 rounded-full bg-slate-100 dark:bg-slate-800 border-2 border-black dark:border-white hover:bg-slate-200 shadow-brutal-sm"
+          className="absolute top-5 right-5 p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition"
         >
-          <X className="w-5 h-5 text-black dark:text-white" />
+          <X className="w-5 h-5" />
         </button>
 
         {/* Modal Header */}
-        <div className="flex items-center justify-between mb-5 pr-8">
+        <div className="flex items-center justify-between mb-5 pr-8 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-neo-yellow border-3 border-black flex items-center justify-center shadow-brutal text-2xl">
+            <div className="w-12 h-12 rounded-2xl clay-btn bg-amber-500 text-white flex items-center justify-center shadow-md text-2xl">
               🏆
             </div>
             <div>
-              <h3 className="text-xl sm:text-2xl font-black">
+              <h3 className="text-xl sm:text-2xl font-extrabold text-slate-800 dark:text-white">
                 명예의 전당 랭킹보드
               </h3>
-              <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                학교 상식 퀴즈 최고 점수 랭킹 (Supabase rankings 연동)
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                학교 상식 퀴즈 최고 득점자 명단 (Supabase Seoul 실시간 연동)
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Action Header */}
+        <div className="flex items-center justify-between py-2 border-b border-slate-200/80 dark:border-slate-800 mb-3 shrink-0">
+          <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+            전체 랭킹 TOP 10
+          </span>
           <button
             onClick={onRefresh}
-            title="새로고침"
-            className="neo-btn p-2 rounded-xl bg-slate-100 dark:bg-slate-800 border-2 border-black dark:border-white text-black dark:text-white"
+            disabled={isLoading}
+            className="px-3 py-1.5 text-xs font-bold clay-btn bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center gap-1.5 hover:bg-slate-50"
           >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+            <span>새로고침</span>
           </button>
         </div>
 
-        {/* List */}
-        <div className="space-y-2.5 overflow-y-auto flex-1 pr-1 scrollbar-thin">
+        {/* Rankings List */}
+        <div className="flex-1 overflow-y-auto space-y-2.5 pr-1">
           {rankings.length === 0 ? (
-            <div className="text-center py-10 font-bold text-slate-400">
-              아직 등록된 랭킹 점수가 없습니다. 첫 주자가 되어 보세요!
+            <div className="py-12 text-center text-slate-400">
+              <p className="text-sm font-bold">아직 등록된 랭킹 기록이 없습니다.</p>
+              <p className="text-xs mt-1">퀴즈를 풀고 1위에 도전해보세요!</p>
             </div>
           ) : (
-            rankings.map((item, idx) => (
+            rankings.map((r, idx) => (
               <div
-                key={item.id || idx}
-                className={`p-3.5 rounded-2xl border-2 border-black dark:border-white flex items-center justify-between shadow-brutal-sm ${
+                key={r.id || idx}
+                className={`p-3.5 rounded-2xl clay-card flex items-center justify-between gap-3 transition-all ${
                   idx === 0
-                    ? 'bg-clay-yellow text-black font-black'
+                    ? 'bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60'
                     : idx === 1
-                    ? 'bg-clay-blue text-black font-black'
+                    ? 'bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700'
                     : idx === 2
-                    ? 'bg-clay-mint text-black font-black'
-                    : 'bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white font-bold'
+                    ? 'bg-orange-50/80 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800/60'
+                    : 'bg-white/80 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800'
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -95,19 +108,19 @@ export const RankingBoard: React.FC<RankingBoardProps> = ({
                     {getRankBadge(idx)}
                   </div>
                   <div>
-                    <div className="text-sm font-black flex items-center gap-1.5">
-                      <span>{item.nickname}</span>
-                      {idx === 0 && <Flame className="w-4 h-4 text-rose-500 animate-bounce" />}
+                    <div className="text-sm font-extrabold text-slate-800 dark:text-white flex items-center gap-1.5">
+                      <span>{r.nickname}</span>
+                      {idx === 0 && <Flame className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />}
                     </div>
-                    <div className="text-[10px] text-slate-500 dark:text-slate-400">
-                      {item.played_at ? String(item.played_at).slice(0, 16) : '최근 기록'}
+                    <div className="text-[10px] text-slate-400">
+                      {new Date(r.played_at).toLocaleDateString('ko-KR')}
                     </div>
                   </div>
                 </div>
 
                 <div className="text-right">
-                  <span className="text-base sm:text-lg font-black text-rose-600 dark:text-rose-400">
-                    {item.score.toLocaleString()}점
+                  <span className="text-base font-black text-indigo-600 dark:text-indigo-400">
+                    {r.score.toLocaleString()}점
                   </span>
                 </div>
               </div>
@@ -116,13 +129,10 @@ export const RankingBoard: React.FC<RankingBoardProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="pt-4 mt-4 border-t-2 border-slate-200 dark:border-slate-800 flex justify-end">
-          <button
-            onClick={onClose}
-            className="neo-btn px-6 py-2.5 bg-black text-white rounded-2xl font-black text-xs"
-          >
-            닫기
-          </button>
+        <div className="pt-4 border-t border-slate-200/80 dark:border-slate-800 mt-3 text-center shrink-0">
+          <p className="text-[11px] text-slate-400 font-semibold">
+            ✨ 상록중학교 상식 퀴즈 참여 점수가 실시간으로 반영됩니다.
+          </p>
         </div>
       </div>
     </div>

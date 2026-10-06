@@ -16,31 +16,31 @@ import {
 interface ChannelNavProps {
   activeChannel: ChannelId | 'all';
   onSelectChannel: (channel: ChannelId | 'all') => void;
-  isTeacherAuthenticated: boolean;
-  onRequestTeacherAuth: () => void;
+  isStaffAccessAllowed: boolean;
+  onRequestStaffAuth: () => void;
 }
 
 export const ChannelNav: React.FC<ChannelNavProps> = ({
   activeChannel,
   onSelectChannel,
-  isTeacherAuthenticated,
-  onRequestTeacherAuth,
+  isStaffAccessAllowed,
+  onRequestStaffAuth,
 }) => {
   const getIcon = (iconName: string) => {
     switch (iconName) {
-      case 'Megaphone': return <Megaphone className="w-4 h-4" />;
-      case 'BellRing': return <BellRing className="w-4 h-4" />;
-      case 'MessageSquare': return <MessageSquare className="w-4 h-4" />;
-      case 'Search': return <Search className="w-4 h-4" />;
-      case 'Award': return <Award className="w-4 h-4" />;
-      case 'Lock': return <Lock className="w-4 h-4 text-red-600" />;
+      case 'Megaphone': return <Megaphone className="w-4 h-4 text-amber-500" />;
+      case 'BellRing': return <BellRing className="w-4 h-4 text-sky-500" />;
+      case 'MessageSquare': return <MessageSquare className="w-4 h-4 text-emerald-500" />;
+      case 'Search': return <Search className="w-4 h-4 text-orange-500" />;
+      case 'Award': return <Award className="w-4 h-4 text-purple-500" />;
+      case 'Lock': return <Lock className="w-4 h-4 text-rose-500" />;
       default: return <MessageSquare className="w-4 h-4" />;
     }
   };
 
   const handleChannelClick = (channelId: ChannelId) => {
-    if (channelId === 'teacher-lounge' && !isTeacherAuthenticated) {
-      onRequestTeacherAuth();
+    if (channelId === 'teacher-lounge' && !isStaffAccessAllowed) {
+      onRequestStaffAuth();
       return;
     }
     onSelectChannel(channelId);
@@ -48,14 +48,14 @@ export const ChannelNav: React.FC<ChannelNavProps> = ({
 
   return (
     <nav className="mb-8">
-      <div className="flex items-center gap-2 overflow-x-auto pb-3 pt-1 scrollbar-thin">
+      <div className="flex items-center gap-2.5 overflow-x-auto pb-3 pt-1 scrollbar-thin">
         {/* All feed button */}
         <button
           onClick={() => onSelectChannel('all')}
-          className={`neo-btn px-4 py-2.5 rounded-2xl text-xs sm:text-sm flex items-center gap-2 font-black shrink-0 ${
+          className={`clay-btn px-4 py-2.5 rounded-2xl text-xs sm:text-sm flex items-center gap-2 font-extrabold shrink-0 transition-all ${
             activeChannel === 'all'
-              ? 'bg-black text-white dark:bg-white dark:text-black'
-              : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200'
+              ? 'bg-indigo-600 text-white shadow-md scale-105'
+              : 'bg-white/80 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 hover:bg-white'
           }`}
         >
           <Layers className="w-4 h-4" />
@@ -69,17 +69,17 @@ export const ChannelNav: React.FC<ChannelNavProps> = ({
             <button
               key={ch.id}
               onClick={() => handleChannelClick(ch.id)}
-              className={`neo-btn px-4 py-2.5 rounded-2xl text-xs sm:text-sm flex items-center gap-2 font-black shrink-0 transition-transform ${
+              className={`clay-btn px-4 py-2.5 rounded-2xl text-xs sm:text-sm flex items-center gap-2 font-bold shrink-0 transition-all ${
                 isSelected
-                  ? 'scale-105 ring-2 ring-black dark:ring-white ring-offset-2'
-                  : 'opacity-90 hover:opacity-100'
-              } ${ch.color}`}
+                  ? 'bg-white dark:bg-slate-700 text-indigo-700 dark:text-indigo-300 ring-2 ring-indigo-500 shadow-md scale-105 font-extrabold'
+                  : 'bg-white/80 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700'
+              }`}
             >
               {getIcon(ch.icon)}
               <span>{ch.name}</span>
               {ch.staffOnly && (
-                <span className="text-[10px] bg-red-500 text-white font-black px-1.5 py-0.5 rounded border border-black ml-0.5">
-                  비공개
+                <span className="text-[10px] bg-rose-500 text-white font-extrabold px-1.5 py-0.2 rounded-full ml-0.5 shadow-sm">
+                  교직원
                 </span>
               )}
             </button>

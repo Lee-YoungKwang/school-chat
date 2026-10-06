@@ -45,7 +45,6 @@ export const SchoolQuizGame: React.FC<SchoolQuizGameProps> = ({
       setIsAnswered(false);
     } else {
       setIsFinished(true);
-      // Trigger confetti celebration!
       try {
         confetti({
           particleCount: 100,
@@ -75,28 +74,29 @@ export const SchoolQuizGame: React.FC<SchoolQuizGameProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-lg bg-clay-yellow text-slate-900 border-3 border-black rounded-3xl p-6 sm:p-8 shadow-brutal-lg">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-fade-in">
+      <div className="relative w-full max-w-lg clay-card glass-panel border border-white/60 dark:border-white/15 p-6 sm:p-8 overflow-hidden shadow-2xl">
         {/* Close Button */}
         <button
           onClick={onClose}
           aria-label="Close"
-          className="absolute top-5 right-5 p-1.5 rounded-full bg-white border-2 border-black hover:bg-slate-100 shadow-brutal-sm"
+          className="absolute top-5 right-5 p-2 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition"
         >
-          <X className="w-5 h-5 text-black" />
+          <X className="w-5 h-5" />
         </button>
 
         {/* Modal Header */}
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-2xl bg-white border-3 border-black flex items-center justify-center shadow-brutal text-2xl">
+          <div className="w-12 h-12 rounded-2xl clay-btn bg-amber-500 text-white flex items-center justify-center shadow-md text-2xl">
             🧠
           </div>
           <div>
-            <h3 className="text-xl sm:text-2xl font-black text-black">
-              학교 상식 미니 퀴즈 대작전!
+            <h3 className="text-xl sm:text-2xl font-extrabold text-slate-800 dark:text-white flex items-center gap-1.5">
+              학교 상식 미니 퀴즈
+              <Sparkles className="w-4 h-4 text-amber-500 fill-amber-400" />
             </h3>
-            <p className="text-xs font-bold text-slate-800">
-              퀴즈를 맞히고 실시간 명예의 전당 랭킹보드에 도전해 보세요!
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              문제를 맞히고 실시간 명예의 전당 랭킹에 도전하세요!
             </p>
           </div>
         </div>
@@ -105,20 +105,20 @@ export const SchoolQuizGame: React.FC<SchoolQuizGameProps> = ({
           <div>
             {/* Progress & Current Score */}
             <div className="flex items-center justify-between mb-4">
-              <span className="text-xs font-black bg-white px-3 py-1 rounded-xl border-2 border-black shadow-brutal-sm">
+              <span className="text-xs font-bold px-3 py-1 rounded-full clay-badge bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
                 문제 {currentQuestionIndex + 1} / {SCHOOL_QUIZ_QUESTIONS.length}
               </span>
-              <span className="text-xs font-black bg-neo-pink text-white px-3 py-1 rounded-xl border-2 border-black shadow-brutal-sm">
+              <span className="text-xs font-bold px-3 py-1 rounded-full clay-badge bg-rose-50 text-rose-700 dark:bg-rose-950 dark:text-rose-300">
                 현재 점수: {score}점
               </span>
             </div>
 
             {/* Question Card */}
-            <div className="p-4 sm:p-5 rounded-2xl bg-white border-3 border-black shadow-brutal mb-5">
+            <div className="p-4 sm:p-5 rounded-2xl clay-card bg-white/90 dark:bg-slate-800/90 border border-slate-200/80 dark:border-slate-700 mb-5">
               <span className="text-xs font-bold text-amber-600 block mb-1">
                 ⭐ 배점: {currentQ.points}점
               </span>
-              <h4 className="text-base sm:text-lg font-black text-black leading-snug">
+              <h4 className="text-base sm:text-lg font-extrabold text-slate-800 dark:text-white leading-snug">
                 {currentQ.question}
               </h4>
             </div>
@@ -128,13 +128,13 @@ export const SchoolQuizGame: React.FC<SchoolQuizGameProps> = ({
               {currentQ.options.map((opt, idx) => {
                 const isSelected = selectedAnswer === idx;
                 const isCorrect = idx === currentQ.answerIndex;
-                let btnStyle = 'bg-white hover:bg-slate-50 text-black';
+                let btnStyle = 'bg-white/80 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 hover:bg-white';
 
                 if (isAnswered) {
                   if (isCorrect) {
-                    btnStyle = 'bg-emerald-300 text-black border-emerald-900';
+                    btnStyle = 'bg-emerald-100 text-emerald-900 border-emerald-400 dark:bg-emerald-950 dark:text-emerald-200';
                   } else if (isSelected && !isCorrect) {
-                    btnStyle = 'bg-rose-300 text-black border-rose-900';
+                    btnStyle = 'bg-rose-100 text-rose-900 border-rose-400 dark:bg-rose-950 dark:text-rose-200';
                   } else {
                     btnStyle = 'bg-slate-100 text-slate-400 opacity-60';
                   }
@@ -145,11 +145,11 @@ export const SchoolQuizGame: React.FC<SchoolQuizGameProps> = ({
                     key={idx}
                     disabled={isAnswered}
                     onClick={() => handleSelectOption(idx)}
-                    className={`w-full p-3.5 rounded-2xl border-2 border-black text-left text-sm font-black flex items-center justify-between shadow-brutal-sm transition-all ${btnStyle}`}
+                    className={`w-full p-3.5 rounded-2xl clay-btn text-left text-sm font-bold flex items-center justify-between transition-all ${btnStyle}`}
                   >
                     <span>{idx + 1}. {opt}</span>
-                    {isAnswered && isCorrect && <CheckCircle2 className="w-5 h-5 text-emerald-800" />}
-                    {isAnswered && isSelected && !isCorrect && <XCircle className="w-5 h-5 text-rose-800" />}
+                    {isAnswered && isCorrect && <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />}
+                    {isAnswered && isSelected && !isCorrect && <XCircle className="w-5 h-5 text-rose-600 shrink-0" />}
                   </button>
                 );
               })}
@@ -159,64 +159,67 @@ export const SchoolQuizGame: React.FC<SchoolQuizGameProps> = ({
             {isAnswered && (
               <button
                 onClick={handleNext}
-                className="w-full neo-btn py-3.5 bg-black text-white rounded-2xl font-black text-sm flex items-center justify-center gap-2"
+                className="w-full py-3 clay-btn bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-sm rounded-2xl flex items-center justify-center gap-2 shadow-lg"
               >
-                <span>{currentQuestionIndex + 1 === SCHOOL_QUIZ_QUESTIONS.length ? '결과 보기' : '다음 문제로'}</span>
+                <span>{currentQuestionIndex + 1 === SCHOOL_QUIZ_QUESTIONS.length ? '최종 결과 확인하기' : '다음 문제'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
             )}
           </div>
         ) : (
-          /* Finished Screen */
-          <div className="text-center py-2 animate-scale-up">
-            <div className="w-20 h-20 mx-auto rounded-3xl bg-white border-3 border-black flex items-center justify-center shadow-brutal text-4xl mb-3">
+          /* Quiz Results View */
+          <div className="text-center py-4">
+            <div className="w-20 h-20 mx-auto mb-4 rounded-3xl clay-card bg-amber-100 text-amber-600 flex items-center justify-center text-4xl shadow-md">
               🏆
             </div>
-            <h4 className="text-2xl font-black text-black mb-1">
-              퀴즈 완료! 축하합니다!
+            <h4 className="text-2xl font-black text-slate-800 dark:text-white mb-1">
+              퀴즈 도전 완료!
             </h4>
-            <p className="text-sm font-bold text-slate-800 mb-4">
-              총 획득 점수: <span className="text-2xl font-black text-rose-600">{score}</span>점!
+            <p className="text-sm font-semibold text-slate-600 dark:text-slate-300 mb-4">
+              총 획득 점수: <strong className="text-indigo-600 dark:text-indigo-400 text-xl">{score}점</strong>
             </p>
 
+            {/* Score Submit Form */}
             {!submitted ? (
-              <form onSubmit={handleSubmitScore} className="p-4 rounded-2xl bg-white border-3 border-black shadow-brutal mb-4 text-left">
-                <label className="block text-xs font-black text-black mb-1">
-                  명예의 전당 랭킹 등록 닉네임
+              <form onSubmit={handleSubmitScore} className="p-4 rounded-2xl clay-card bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 mb-5">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">
+                  명예의 전당에 닉네임을 등록하세요!
                 </label>
                 <div className="flex gap-2">
                   <input
                     type="text"
+                    required
+                    placeholder="등록할 닉네임 입력"
                     value={nickname}
                     onChange={(e) => setNickname(e.target.value)}
-                    placeholder="예: 2학년 수학의정석"
-                    className="flex-1 px-3 py-2 rounded-xl border-2 border-black text-sm font-bold shadow-brutal-sm focus:outline-none"
+                    className="flex-1 px-3.5 py-2 text-xs clay-input text-slate-800 dark:text-white"
                   />
                   <button
                     type="submit"
-                    className="neo-btn px-4 py-2 bg-neo-green text-black rounded-xl font-black text-xs hover:bg-emerald-400"
+                    className="clay-btn px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl"
                   >
-                    점수 등록
+                    랭킹 등록
                   </button>
                 </div>
               </form>
             ) : (
-              <div className="p-3 mb-4 rounded-2xl bg-emerald-100 border-2 border-emerald-600 text-emerald-800 text-xs font-black">
-                ✅ 점수가 명예의 전당 랭킹보드에 성공적으로 등록되었습니다!
+              <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 text-xs font-bold mb-5 flex items-center justify-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <span>명예의 전당에 점수가 정상 등록되었습니다! 🎉</span>
               </div>
             )}
 
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <button
                 onClick={handleRestart}
-                className="neo-btn flex-1 py-3 bg-white text-black rounded-2xl font-black text-xs flex items-center justify-center gap-1.5"
+                className="flex-1 py-2.5 clay-btn bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5"
               >
                 <RotateCcw className="w-4 h-4" />
                 <span>다시 도전하기</span>
               </button>
               <button
                 onClick={onClose}
-                className="neo-btn flex-1 py-3 bg-black text-white rounded-2xl font-black text-xs"
+                className="flex-1 py-2.5 clay-btn bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl"
               >
                 닫기
               </button>

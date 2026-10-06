@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
-import { Post, Comment, Ranking, ChannelId } from '@/types';
-import { INITIAL_POSTS, INITIAL_RANKINGS } from '@/data/mockData';
+import { Post, Comment, Ranking, ChannelId, User, UserRole, UserStatus } from '@/types';
+import { INITIAL_POSTS, INITIAL_RANKINGS, INITIAL_USERS } from '@/data/mockData';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
@@ -16,6 +16,7 @@ export const supabase = isSupabaseConfigured
 // Local In-Memory Fallback State (when DB is binding or local)
 let inMemoryPosts: Post[] = [...INITIAL_POSTS];
 let inMemoryRankings: Ranking[] = [...INITIAL_RANKINGS];
+let inMemoryUsers: User[] = [...INITIAL_USERS];
 
 export async function fetchPosts(channel?: ChannelId): Promise<Post[]> {
   if (isSupabaseConfigured && supabase) {
@@ -197,4 +198,171 @@ export async function insertRanking(nickname: string, score: number): Promise<Ra
 
   inMemoryRankings = [newRanking, ...inMemoryRankings];
   return newRanking;
+}
+
+// ========================================================
+// User Authentication & Admin Approval Management
+// ========================================================
+
+export async function fetchUsers(): Promise<User[]> {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .order('id', { ascending: true });
+      if (!error && data && data.length > 0) {
+        return data.map((item: any) => ({
+          id: String(item.id),
+          username: item.username,
+          password: item.password,
+          name: item.name,
+          role: (item.role as UserRole) || 'student',
+          status: (item.status as UserStatus) || 'pending',
+          grade: item.grade ? Number(item.grade) : undefined,
+          class_num: item.class_num ? Number(item.class_num) : undefined,
+          student_num: item.student_num ? Number(item.student_num) : undefined,
+          department: item.department || undefined,
+          position: item.position || undefined,
+          bio: item.bio || undefined,
+          created_at: item.created_at,
+        }));
+      }
+    } catch (e) {
+      console.warn('Supabase fetchUsers error, fallback to memory:', e);
+    }
+  }
+
+  return [...inMemoryUsers];
+}
+
+export async function findUser(username: string): Promise<User | null> {
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('username', username)
+        .single();
+      if (!error && data) {
+        return {
+          id: String(data.id),
+          username: data.username,
+          password: data.password,
+          name: data.name,
+          role: (data.role as UserRole) || 'student',
+          status: (data.status as UserStatus) || 'pending',
+          grade: data.grade ? Number(data.grade) : undefined,
+          class_num: data.class_num ? Number(data.class_num) : undefined,
+          student_num: data.student_num ? Number(data.student_num) : undefined,
+          department: data.department || undefined,
+          position: data.position || undefined,
+          bio: data.bio || undefined,
+          created_at: data.created_at,
+        };
+      }
+    } catch (e) {
+      console.warn('Supabase findUser error, fallback to memory:', e);
+    }
+  }
+
+  const found = inMemoryUsers.find(u => u.username === username);
+  return found || null;
+}
+
+export async function createUser(userData: Omit<User, 'id' | 'created_at'>): Promise<User> {
+  const newUser: User = {
+    id: 'user_' + Date.now(),
+    ...userData,
+    created_at: new Date().toISOString(),
+  };
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      const { data, error } = await supabase.from('users').insert([
+        {
+          username: newUser.username,
+          password: newUser.password || '1234',
+          name: newUser.name,
+          role: newUser.role,
+          status: newUser.status,
+          grade: newUser.grade,
+          class_num: newUser.class_num,
+          student_num: newUser.student_num,
+          department: newUser.department,
+          position: newUser.position,
+          bio: newUser.bio,
+        }
+      ]).select().single();
+
+      if (!error && data) {
+        newUser.id = String(data.id);
+      }
+    } catch (e) {
+      console.warn('Supabase createUser error, saving to in-memory:', e);
+    }
+  }
+
+  // Deduplicate and push
+  inMemoryUsers = inMemoryUsers.filter(u => u.username !== newUser.username);
+  inMemoryUsers = [...inMemoryUsers, newUser];
+  return newUser;
+}
+
+export async function updateUserStatus(userId: string, status: UserStatus): Promise<User | null> {
+  const user = inMemoryUsers.find(u => u.id === userId);
+  if (user) {
+    user.status = status;
+  }
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase
+        .from('users')
+        .update({ status })
+        .eq('id', userId);
+    } catch (e) {
+      console.warn('Supabase updateUserStatus error:', e);
+    }
+  }
+
+  return user || null;
+}
+
+export async function updateUserRole(userId: string, role: UserRole): Promise<User | null> {
+  const user = inMemoryUsers.find(u => u.id === userId);
+  if (user) {
+    user.role = role;
+  }
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase
+        .from('users')
+        .update({ role })
+        .eq('id', userId);
+    } catch (e) {
+      console.warn('Supabase updateUserRole error:', e);
+    }
+  }
+
+  return user || null;
+}
+
+export async function deleteUser(userId: string): Promise<boolean> {
+  inMemoryUsers = inMemoryUsers.filter(u => u.id !== userId);
+
+  if (isSupabaseConfigured && supabase) {
+    try {
+      await supabase
+        .from('users')
+        .delete()
+        .eq('id', userId);
+      return true;
+    } catch (e) {
+      console.warn('Supabase deleteUser error:', e);
+    }
+  }
+
+  return true;
 }

@@ -1,16 +1,15 @@
 'use client';
 
 import React, { useState } from 'react';
-import { ChannelId, UserRole } from '@/types';
+import { ChannelId, UserRole, User } from '@/types';
 import { CHANNELS } from '@/data/mockData';
-import { X, Send, PenTool, Sparkles } from 'lucide-react';
+import { X, Send, PenTool, Sparkles, Shield, AlertCircle } from 'lucide-react';
 
 interface CreatePostModalProps {
   isOpen: boolean;
   onClose: () => void;
   defaultChannel: ChannelId | 'all';
-  currentRole: UserRole;
-  isTeacherAuthenticated: boolean;
+  currentUser: User | null;
   onSubmitPost: (post: {
     channel: ChannelId;
     title: string;
@@ -25,8 +24,7 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
   isOpen,
   onClose,
   defaultChannel,
-  currentRole,
-  isTeacherAuthenticated,
+  currentUser,
   onSubmitPost,
 }) => {
   const initialChannel: ChannelId = 
@@ -35,23 +33,25 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
   const [channel, setChannel] = useState<ChannelId>(initialChannel);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [author, setAuthor] = useState(
-    currentRole === 'teacher' ? '교직원 박선생님' : '2학년 학생'
-  );
   const [tag, setTag] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
   if (!isOpen) return null;
 
+  const authorName = currentUser?.name || '익명 작성자';
+  const authorRole: UserRole = currentUser?.role || 'student';
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim() || !content.trim() || !author.trim()) {
-      setErrorMsg('제목, 내용, 작성자명을 모두 입력해 주세요!');
+    setErrorMsg('');
+
+    if (!title.trim() || !content.trim()) {
+      setErrorMsg('제목과 내용을 모두 입력해 주세요.');
       return;
     }
 
-    if (channel === 'teacher-lounge' && !isTeacherAuthenticated) {
-      setErrorMsg('교직원 전용 공간에는 인증된 교직원만 글을 작성할 수 있습니다.');
+    if (channel === 'teacher-lounge' && authorRole !== 'teacher' && authorRole !== 'admin') {
+      setErrorMsg('교직원 전용 채널에는 교직원 또는 관리자만 글을 작성할 수 있습니다.');
       return;
     }
 
@@ -59,151 +59,137 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
       channel,
       title: title.trim(),
       content: content.trim(),
-      author: author.trim(),
-      role: currentRole,
+      author: authorName,
+      role: authorRole,
       tag: tag.trim() || undefined,
     });
 
-    setTitle('');
-    setContent('');
-    setTag('');
-    setErrorMsg('');
     onClose();
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="relative w-full max-w-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white border-3 border-black dark:border-white rounded-3xl p-6 sm:p-8 shadow-brutal-lg max-h-[90vh] overflow-y-auto">
-        {/* Close Button */}
-        <button
-          onClick={onClose}
-          aria-label="Close"
-          className="absolute top-5 right-5 p-1.5 rounded-full bg-slate-100 dark:bg-slate-850 border-2 border-black dark:border-white hover:bg-slate-200 shadow-brutal-sm text-black dark:text-white"
-        >
-          <X className="w-5 h-5" />
-        </button>
-
-        {/* Modal Title */}
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-12 h-12 rounded-2xl bg-neo-yellow border-3 border-black flex items-center justify-center shadow-brutal text-2xl">
-            ✍️
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-fade-in">
+      <div className="relative w-full max-w-lg clay-card glass-panel overflow-hidden border border-white/60 dark:border-white/15 p-6 md:p-8 max-h-[92vh] overflow-y-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between pb-4 border-b border-indigo-100 dark:border-slate-800">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-2xl clay-btn bg-indigo-500 text-white flex items-center justify-center shadow-md">
+              <PenTool className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-xl font-extrabold text-slate-800 dark:text-white flex items-center gap-1.5">
+                새 게시글 작성
+                <Sparkles className="w-4 h-4 text-amber-500 fill-amber-400" />
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                학교 공동체와 함께 나누고 싶은 이야기를 적어주세요.
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-xl sm:text-2xl font-black">
-              새 글 / 방명록 작성하기
-            </h3>
-            <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
-              학교 친구들 및 교직원과 소중한 생각과 소식을 나누어 보세요.
-            </p>
-          </div>
+          <button
+            onClick={onClose}
+            className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
+        {/* Error Alert */}
         {errorMsg && (
-          <div className="mb-4 p-3 rounded-xl bg-red-100 border-2 border-red-600 text-xs font-black text-red-700">
-            {errorMsg}
+          <div className="my-4 p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/60 flex items-center gap-2 text-rose-700 dark:text-rose-300 text-xs font-bold animate-fade-in">
+            <AlertCircle className="w-4 h-4 shrink-0 text-rose-500" />
+            <span>{errorMsg}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Channel Select */}
-          <div>
-            <label className="block text-xs font-black mb-1.5">
-              게시할 장소 (채널 선택)
-            </label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {CHANNELS.map((ch) => {
-                const isSelected = channel === ch.id;
-                const isDisabled = ch.staffOnly && !isTeacherAuthenticated;
-                return (
-                  <button
-                    type="button"
-                    key={ch.id}
-                    disabled={isDisabled}
-                    onClick={() => setChannel(ch.id)}
-                    className={`py-2 px-3 rounded-xl text-xs font-black border-2 border-black flex items-center justify-between transition-all ${
-                      isSelected
-                        ? 'bg-neo-blue text-white shadow-brutal-sm'
-                        : isDisabled
-                        ? 'bg-slate-200 text-slate-400 cursor-not-allowed border-dashed'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-200'
-                    }`}
-                  >
-                    <span>{ch.name}</span>
-                    {ch.staffOnly && <span className="text-[10px]">🔒</span>}
-                  </button>
-                );
-              })}
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+          {/* Author Badge Preview */}
+          <div className="p-3 rounded-2xl clay-card bg-slate-50/70 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between">
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-bold">작성자 정보</span>
+            <div className="flex items-center gap-2">
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold clay-badge ${
+                authorRole === 'admin'
+                  ? 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                  : authorRole === 'teacher'
+                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                  : 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300'
+              }`}>
+                {authorRole === 'admin' ? '👑 관리자' : authorRole === 'teacher' ? '🏫 교직원' : '🎒 학생'}
+              </span>
+              <span className="text-xs font-extrabold text-slate-800 dark:text-white">
+                {authorName}
+              </span>
             </div>
           </div>
 
-          {/* Author & Tag */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-black mb-1">
-                작성자 닉네임
-              </label>
-              <input
-                type="text"
-                value={author}
-                onChange={(e) => setAuthor(e.target.value)}
-                placeholder="예: 2-3 반장 홍길동"
-                className="w-full px-3 py-2.5 rounded-xl border-2 border-black dark:border-white bg-slate-50 dark:bg-slate-800 text-sm font-bold shadow-brutal-sm focus:outline-none"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-black mb-1">
-                태그 (선택)
-              </label>
-              <input
-                type="text"
-                value={tag}
-                onChange={(e) => setTag(e.target.value)}
-                placeholder="예: 급식자랑, 축제, 알림"
-                className="w-full px-3 py-2.5 rounded-xl border-2 border-black dark:border-white bg-slate-50 dark:bg-slate-800 text-sm font-bold shadow-brutal-sm focus:outline-none"
-              />
-            </div>
+          {/* Channel Select */}
+          <div>
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+              게시 채널
+            </label>
+            <select
+              value={channel}
+              onChange={(e) => setChannel(e.target.value as ChannelId)}
+              className="w-full px-3.5 py-2.5 text-xs clay-input text-slate-800 dark:text-white font-bold"
+            >
+              {CHANNELS.map((ch) => (
+                <option key={ch.id} value={ch.id}>
+                  {ch.name} {ch.staffOnly ? '(교직원 전용)' : ''}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Title */}
           <div>
-            <label className="block text-xs font-black mb-1">
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
               글 제목
             </label>
             <input
               type="text"
+              required
+              placeholder="제목을 입력해 주세요"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="제목을 입력해 주세요"
-              className="w-full px-3 py-2.5 rounded-xl border-2 border-black dark:border-white bg-slate-50 dark:bg-slate-800 text-sm font-bold shadow-brutal-sm focus:outline-none"
+              className="w-full px-3.5 py-2.5 text-sm clay-input text-slate-800 dark:text-white font-bold"
+            />
+          </div>
+
+          {/* Tag */}
+          <div>
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+              해시태그 (선택)
+            </label>
+            <input
+              type="text"
+              placeholder="예: 급식자랑, 축제, 분실물"
+              value={tag}
+              onChange={(e) => setTag(e.target.value)}
+              className="w-full px-3.5 py-2 text-xs clay-input text-slate-800 dark:text-white"
             />
           </div>
 
           {/* Content */}
           <div>
-            <label className="block text-xs font-black mb-1">
-              본문 내용
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
+              내용
             </label>
             <textarea
-              rows={4}
+              required
+              rows={5}
+              placeholder="서로를 배려하는 따뜻한 학교 대화 문화를 만들어가요."
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              placeholder="학교 친구들과 나눌 이야기를 자유롭게 적어보세요..."
-              className="w-full px-3 py-2.5 rounded-xl border-2 border-black dark:border-white bg-slate-50 dark:bg-slate-800 text-sm font-medium shadow-brutal-sm focus:outline-none resize-none"
+              className="w-full px-3.5 py-2.5 text-xs clay-input text-slate-800 dark:text-white leading-relaxed resize-none"
             />
           </div>
 
-          {/* Buttons */}
-          <div className="flex gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="neo-btn flex-1 py-3 bg-slate-200 dark:bg-slate-700 text-black dark:text-white rounded-2xl font-black text-sm"
-            >
-              닫기
-            </button>
+          {/* Submit Button */}
+          <div className="pt-2">
             <button
               type="submit"
-              className="neo-btn flex-1 py-3 bg-neo-green text-black rounded-2xl font-black text-sm flex items-center justify-center gap-2 hover:bg-emerald-400"
+              className="w-full py-3 clay-btn bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-sm rounded-2xl transition shadow-lg flex items-center justify-center gap-2"
             >
               <Send className="w-4 h-4" />
               <span>게시글 등록하기</span>
